@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicPulse Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            color: #1f2937;
+        }
+
+        nav {
+            background: #123b5d;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        nav .brand {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        nav .links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+        }
+
+        nav .links a {
+            color: white;
+            text-decoration: none;
+        }
+
+        nav .links a:hover {
+            text-decoration: underline;
+        }
+
+        .admin-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .logout-form {
+            display: inline-flex;
+            margin: 0;
+        }
+
+        .logout-button {
+            background: white;
+            color: #123b5d;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .logout-button:hover {
+            background: #e8f2ff;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            display: block;
+            padding: 25px;
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #dce4ed;
+            border-top: 5px solid #2563eb;
+            text-decoration: none;
+            color: #1f2937;
+            box-shadow: 0 4px 12px #0000000a;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px #00000012;
+        }
+
+        .pending {
+            border-top-color: #f59e0b;
+        }
+
+        .progress {
+            border-top-color: #2563eb;
+        }
+
+        .solved {
+            border-top-color: #16a34a;
+        }
+
+        .label,
+        .count,
+        .hint {
+            display: block;
+        }
+
+        .label {
+            font-size: 16px;
+            color: #64748b;
+        }
+
+        .count {
+            font-size: 38px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: #2563eb;
+        }
+
+        .notice {
+            margin-top: 25px;
+            padding: 16px;
+            background: #e8f2ff;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .notice p {
+            margin-bottom: 0;
+        }
+
+        .admin-notice {
+            margin-top: 25px;
+            padding: 18px;
+            background: white;
+            border: 1px solid #bbf7d0;
+            border-left: 5px solid #16a34a;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .admin-notice h2 {
+            margin-top: 0;
+            font-size: 19px;
+            color: #166534;
+        }
+
+        .admin-notice p {
+            margin-bottom: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px 15px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            nav .links {
+                width: 100%;
+                gap: 12px;
+            }
+
+            main {
+                margin-top: 25px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            nav .links {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <a class="brand" href="{{ url_for('home') }}">
+            CivicPulse
+        </a>
+
+        <div class="links">
+            <a href="{{ url_for('home') }}">Home</a>
+
+            <a href="{{ url_for('report') }}">Report Issue</a>
+
+            <a href="{{ url_for('all_complaints') }}">
+                All Complaints
+            </a>
+
+            {% if is_admin %}
+                <span class="admin-badge">
+                    Administrator
+                </span>
+
+                <form
+                    class="logout-form"
+                    action="{{ url_for('admin_logout') }}"
+                    method="POST"
+                >
+                    <button
+                        type="submit"
+                        class="logout-button"
+                    >
+                        Logout
+                    </button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('admin_login') }}">
+                    Admin Login
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- DASHBOARD CONTENT -->
+    <main>
+        <h1>Dashboard</h1>
+
+        <p class="subtitle">
+            Intelligent Civic Issue Prioritization and
+            Resource Planning System. Monitor civic
+            complaints and track their resolution status.
+        </p>
+
+        <!-- SUMMARY CARDS -->
+        <section class="cards">
+
+            <a
+                class="card"
+                href="{{ url_for('all_complaints') }}"
+            >
+                <span class="label">Total Issues</span>
+
+                <span class="count">
+                    {{ counts.total | default(0) }}
+                </span>
+
+                <span class="hint">
+                    View all complaints →
+                </span>
+            </a>
+
+            <a
+                class="card pending"
+                href="{{ url_for('complaints_by_status', status_slug='pending') }}"
+            >
+                <span class="label">Pending Issues</span>
+
+                <span class="count">
+                    {{ counts.pending | default(0) }}
+                </span>
+
+                <span class="hint">
+                    View pending complaints →
+                </span>
+            </a>
+
+            <a
+                class="card progress"
+                href="{{ url_for('complaints_by_status', status_slug='in-progress') }}"
+            >
+                <span class="label">In Progress</span>
+
+                <span class="count">
+                    {{ counts.in_progress | default(0) }}
+                </span>
+
+                <span class="hint">
+                    View ongoing repairs →
+                </span>
+            </a>
+
+            <a
+                class="card solved"
+                href="{{ url_for('complaints_by_status', status_slug='solved') }}"
+            >
+                <span class="label">Solved Issues</span>
+
+                <span class="count">
+                    {{ counts.solved | default(0) }}
+                </span>
+
+                <span class="hint">
+                    View resolved complaints →
+                </span>
+            </a>
+
+        </section>
+
+        <!-- GENERAL NOTICE -->
+        <div class="notice">
+            <strong>Welcome to CivicPulse!</strong>
+
+            <p>
+                Report problems such as potholes, overflowing
+                garbage bins, damaged streetlights, and drainage
+                issues. Complaints are prioritized according to
+                safety, impact, and severity.
+            </p>
+        </div>
+
+        <!-- ADMIN-ONLY NOTICE -->
+        {% if is_admin %}
+            <section class="admin-notice">
+                <h2>Administrator Access</h2>
+
+                <p>
+                    You are logged in as an administrator.
+                    Open All Complaints to review reports and
+                    manage complaint statuses. Click Logout
+                    to end your administrator session.
+                </p>
+            </section>
+        {% endif %}
+
+    </main>
+
+    <footer>
+        CivicPulse — Smarter Civic Issue Management
+    </footer>
+
+</body>
+</html>

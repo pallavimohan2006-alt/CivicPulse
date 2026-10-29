@@ -1,0 +1,5 @@
+
+Flask
+ImageHash
+Pillow
+gunicorn

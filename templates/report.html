@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report an Issue | CivicPulse</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #087f65;
+            --primary-dark: #06664f;
+            --text: #18332e;
+            --muted: #647872;
+            --background: #f4f8f6;
+            --border: #e0eae6;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 18px 7%;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            color: var(--primary);
+            font-size: 25px;
+            font-weight: 800;
+        }
+
+        .brand span {
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 35px 22px 55px;
+        }
+
+        .page-heading {
+            margin-bottom: 27px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #dff4eb;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .5px;
+        }
+
+        .page-heading h1 {
+            margin: 15px 0 8px;
+            font-size: clamp(28px, 4vw, 38px);
+            line-height: 1.2;
+        }
+
+        .page-heading p {
+            max-width: 700px;
+            color: var(--muted);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(250px, .8fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel {
+            padding: 25px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(25, 70, 55, .04);
+            min-width: 0;
+        }
+
+        .panel h2 {
+            margin: 0 0 20px;
+            font-size: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        input,
+        select,
+        textarea {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #cbd9d4;
+            border-radius: 9px;
+            background: white;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid #a3e5d4;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            background: #f8fbfa;
+        }
+
+        .hint {
+            display: block;
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        #locationMap {
+            width: 100%;
+            height: 340px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eaf1ee;
+            z-index: 1;
+        }
+
+        .map-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .map-button {
+            padding: 11px 15px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .map-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .map-button:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        .map-message {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .coordinates {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--muted);
+            overflow-wrap: anywhere;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 9px;
+            background: var(--primary);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .submit-button:disabled {
+            opacity: .65;
+            cursor: wait;
+        }
+
+        #message {
+            margin-top: 14px;
+            overflow-wrap: anywhere;
+            font-size: 14px;
+        }
+
+        .info-card {
+            margin-bottom: 14px;
+            padding: 16px;
+            border: 1px solid #e2eee8;
+            border-radius: 11px;
+            background: #f7fbf9;
+        }
+
+        .info-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-icon {
+            font-size: 23px;
+            margin-bottom: 5px;
+        }
+
+        .info-card h3 {
+            margin: 0 0 5px;
+            font-size: 15px;
+        }
+
+        .info-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Duplicate complaint popup */
+        .duplicate-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, .58);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .duplicate-modal.show {
+            display: flex;
+        }
+
+        .duplicate-box {
+            width: 100%;
+            max-width: 440px;
+            padding: 28px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, .2);
+            text-align: center;
+            animation: popupAppear .2s ease-out;
+        }
+
+        .duplicate-icon {
+            font-size: 44px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .duplicate-box h2 {
+            margin: 0 0 12px;
+            color: #b45309;
+            font-size: 23px;
+        }
+
+        .duplicate-box p {
+            color: #647872;
+            font-size: 14px;
+        }
+
+        .duplicate-id {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .duplicate-box button {
+            margin-top: 12px;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .duplicate-box button:hover {
+            background: var(--primary-dark);
+        }
+
+        .duplicate-box button:focus-visible {
+            outline: 3px solid #a3e5d4;
+            outline-offset: 3px;
+        }
+
+        @keyframes popupAppear {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        footer {
+            padding: 24px 15px;
+            text-align: center;
+            color: var(--muted);
+            background: white;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        @media (max-width: 760px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 16px 5%;
+            }
+
+            .container {
+                padding: 28px 16px 40px;
+            }
+
+            .panel {
+                padding: 20px;
+            }
+
+            #locationMap {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .nav-links {
+                gap: 12px;
+            }
+
+            .nav-links a {
+                font-size: 12px;
+            }
+
+            .brand {
+                font-size: 22px;
+            }
+
+            .duplicate-box {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="brand" href="{{ url_for('home') }}">Civic<span>Pulse</span></a>
+
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('report') }}">Report Issue</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="page-heading">
+            <span class="eyebrow">YOUR VOICE MATTERS</span>
+            <h1>Report a Civic Issue</h1>
+            <p>
+                Help improve your community by reporting local problems.
+                Select the problem location on the map, explain its impact,
+                and upload a photo if available.
+            </p>
+        </header>
+
+        <div class="layout">
+            <section class="panel">
+                <h2>Complaint Details</h2>
+
+                <form id="issueForm"
+                      action="{{ url_for('create_issue') }}"
+                      method="POST"
+                      enctype="multipart/form-data">
+
+                    <div class="form-group">
+                        <label for="category">Complaint Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="Water Supply">Water Supply</option>
+                            <option value="Drainage">Drainage</option>
+                            <option value="Road Damage">Road Damage</option>
+                            <option value="Garbage">Garbage</option>
+                            <option value="Streetlight">Streetlight</option>
+                            <option value="Public Safety">Public Safety</option>
+                        </select>
+                        <span class="hint">
+                            Your home-page category is selected automatically when available.
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">Short Issue Title *</label>
+                        <input type="text"
+                               id="title"
+                               name="title"
+                               maxlength="150"
+                               placeholder="Example: Pothole near the bus stop"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Problem Location / Address *</label>
+                        <textarea id="address"
+                                  name="address"
+                                  rows="3"
+                                  placeholder="Click the map or type the street, area, or landmark"
+                                  required></textarea>
+
+                        <span class="hint">
+                            Search for an address or click the map to mark the problem location.
+                        </span>
+
+                        <div id="locationMap"
+                             role="application"
+                             aria-label="Interactive map for selecting a civic issue location"></div>
+
+                        <div class="map-actions">
+                            <button type="button" class="map-button" id="useMyLocation">
+                                Use My Location
+                            </button>
+
+                            <button type="button" class="map-button" id="searchAddress">
+                                Find Address on Map
+                            </button>
+                        </div>
+
+                        <p id="mapMessage"
+                           class="map-message"
+                           role="status"
+                           aria-live="polite">
+                            Loading map...
+                        </p>
+
+                        <span id="coordinates" class="coordinates">
+                            No map location selected.
+                        </span>
+
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="severity">Problem Severity *</label>
+                        <select id="severity" name="severity" required>
+                            <option value="">Select severity</option>
+                            <option value="1">1 — Very Low</option>
+                            <option value="2">2 — Low</option>
+                            <option value="3">3 — Moderate</option>
+                            <option value="4">4 — High</option>
+                            <option value="5">5 — Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="safety">Safety Risk *</label>
+                        <select id="safety" name="safety" required>
+                            <option value="">Select safety risk</option>
+                            <option value="1">1 — Very Low Risk</option>
+                            <option value="2">2 — Low Risk</option>
+                            <option value="3">3 — Moderate Risk</option>
+                            <option value="4">4 — High Risk</option>
+                            <option value="5">5 — Critical Risk</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="impact">Community Impact — People Affected *</label>
+                        <select id="impact" name="impact" required>
+                            <option value="">Select estimated impact</option>
+                            <option value="1">1 — Low: 1–5 people</option>
+                            <option value="2">2 — Mild: 6–20 people</option>
+                            <option value="3">3 — Moderate: 21–50 people</option>
+                            <option value="4">4 — High: 51–100 people</option>
+                            <option value="5">5 — Critical: More than 100 people</option>
+                        </select>
+                        <span class="hint">
+                            Choose the approximate number of people affected.
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photo">Upload a Problem Photo (Optional)</label>
+                        <input type="file"
+                               id="photo"
+                               name="photo"
+                               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                        <span class="hint">
+                            Accepted formats: PNG, JPG, JPEG, WEBP. Maximum size: 5 MB.
+                        </span>
+                    </div>
+
+                    <button type="submit" class="submit-button">
+                        Submit Complaint
+                    </button>
+
+                    <p id="message" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <aside class="panel">
+                <h2>How It Works</h2>
+
+                <div class="info-card">
+                    <div class="info-icon">📝</div>
+                    <h3>1. Submit a Complaint</h3>
+                    <p>Select the category, mark the location, choose the ratings, and optionally add a photo.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">📍</div>
+                    <h3>2. Pinpoint the Problem</h3>
+                    <p>Use the map or your device location to identify the affected area.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">🎯</div>
+                    <h3>3. Smart Priority Ranking</h3>
+                    <p>Complaints are ranked using severity, safety risk, and community impact so authorities can identify urgent issues.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">🖼️</div>
+                    <h3>4. Duplicate Complaint Detection</h3>
+                    <p>CivicPulse can compare uploaded photos and locations to help identify repeated reports of the same issue.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">⏱️</div>
+                    <h3>5. Automatic Report Time</h3>
+                    <p>The date and time are recorded automatically when the complaint is submitted.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">🔎</div>
+                    <h3>6. Complaint Identification</h3>
+                    <p>Each saved complaint receives a unique ID, such as CP-0001.</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Duplicate warning popup -->
+    <div id="duplicateModal"
+         class="duplicate-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="duplicateTitle"
+         aria-describedby="duplicateDetails">
+
+        <div class="duplicate-box">
+            <div class="duplicate-icon">⚠️</div>
+
+            <h2 id="duplicateTitle">Similar Complaint Found!</h2>
+
+            <p id="duplicateDetails">
+                A similar complaint has already been reported at this location.
+            </p>
+
+            <p>
+                Your new complaint has not been submitted because it may be a duplicate.
+                Please check the existing complaint before trying again.
+            </p>
+
+            <p id="duplicateIdContainer" hidden>
+                Existing complaint ID:
+                <span id="duplicateId" class="duplicate-id"></span>
+            </p>
+
+            <button type="button" id="closeDuplicateModal">
+                Understand
+            </button>
+        </div>
+    </div>
+
+    <footer>CivicPulse — Report. Track. Improve.</footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("issueForm");
+        const message = document.getElementById("message");
+        const modal = document.getElementById("duplicateModal");
+        const duplicateDetails = document.getElementById("duplicateDetails");
+        const duplicateId = document.getElementById("duplicateId");
+        const duplicateIdContainer = document.getElementById("duplicateIdContainer");
+        const closeModalButton = document.getElementById("closeDuplicateModal");
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        let submitting = false;
+
+        function closeDuplicateModal() {
+            modal.classList.remove("show");
+            submitButton.focus();
+        }
+
+        function showDuplicatePopup(result) {
+            const existingId =
+                result.duplicate_issue_id ||
+                result.existing_issue_id ||
+                result.issue_id ||
+                "";
+
+            duplicateDetails.textContent =
+                result.message ||
+                "An existing complaint has a similar photo and a nearby location.";
+
+            if (existingId) {
+                duplicateId.textContent = String(existingId);
+                duplicateIdContainer.hidden = false;
+            } else {
+                duplicateId.textContent = "";
+                duplicateIdContainer.hidden = true;
+            }
+
+            modal.classList.add("show");
+            closeModalButton.focus();
+        }
+
+        closeModalButton.addEventListener("click", closeDuplicateModal);
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeDuplicateModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeDuplicateModal();
+            }
+        });
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            if (submitting || !form.reportValidity()) {
+                return;
+            }
+
+            submitting = true;
+            submitButton.disabled = true;
+            submitButton.textContent = "Checking complaint...";
+            message.textContent = "";
+            message.style.color = "";
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: new FormData(form),
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                const contentType = response.headers.get("content-type") || "";
+
+                if (!contentType.includes("application/json")) {
+                    throw new Error(
+                        "The server returned an unexpected response. Check the Flask terminal for errors."
+                    );
+                }
+
+                const result = await response.json();
+
+                if (
+                    response.status === 409 &&
+                    (
+                        result.duplicate === true ||
+                        result.is_duplicate === true
+                    )
+                ) {
+                    showDuplicatePopup(result);
+                    return;
+                }
+
+                if (!response.ok || result.success === false) {
+                    throw new Error(
+                        result.error ||
+                        result.message ||
+                        "Unable to submit the complaint. Please try again."
+                    );
+                }
+
+                message.style.color = "#087f65";
+                message.textContent =
+                    result.message ||
+                    "Complaint submitted successfully! Complaint ID: " +
+                    (
+                        result.issue_id ||
+                        result.id ||
+                        "Created"
+                    );
+
+                form.reset();
+
+                if (typeof window.resetCivicPulseMap === "function") {
+                    window.resetCivicPulseMap();
+                }
+
+            } catch (error) {
+                message.style.color = "#b42318";
+                message.textContent =
+                    error.message ||
+                    "Something went wrong. Please try again.";
+            } finally {
+                submitting = false;
+                submitButton.disabled = false;
+                submitButton.textContent = "Submit Complaint";
+            }
+        });
+    });
+    </script>
+
+    <!-- Interactive map and location selection -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const mapElement = document.getElementById("locationMap");
+        const addressInput = document.getElementById("address");
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
+        const message = document.getElementById("mapMessage");
+        const coordinates = document.getElementById("coordinates");
+        const locationButton = document.getElementById("useMyLocation");
+        const searchButton = document.getElementById("searchAddress");
+
+        if (!mapElement || !window.L) {
+            message.textContent =
+                "The map could not load. Check your internet connection.";
+            return;
+        }
+
+        // Default map view. Users can select any location.
+        const map = L.map("locationMap").setView([12.9716, 77.5946], 12);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let marker = null;
+        let lookupNumber = 0;
+
+        message.textContent =
+            "Click the map to select the problem location.";
+
+        function updateMarker(lat, lng) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng]).addTo(map);
+            }
+
+            marker.bindPopup("Selected problem location").openPopup();
+
+            latitudeInput.value = Number(lat).toFixed(6);
+            longitudeInput.value = Number(lng).toFixed(6);
+
+            coordinates.textContent =
+                "Latitude: " + Number(lat).toFixed(6) +
+                " | Longitude: " + Number(lng).toFixed(6);
+        }
+
+        async function reverseLookup(lat, lng, requestNumber) {
+            try {
+                const url =
+                    "https://nominatim.openstreetmap.org/reverse?format=jsonv2" +
+                    "&lat=" + encodeURIComponent(lat) +
+                    "&lon=" + encodeURIComponent(lng);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error("Address lookup unavailable");
+                }
+
+                const data = await response.json();
+
+                if (requestNumber !== lookupNumber) {
+                    return;
+                }
+
+                if (data.display_name) {
+                    addressInput.value = data.display_name;
+                    message.textContent =
+                        "Location selected. Please verify the address.";
+                } else {
+                    message.textContent =
+                        "Map point selected. Type the address if needed.";
+                }
+            } catch (error) {
+                if (requestNumber === lookupNumber) {
+                    message.textContent =
+                        "Map point selected. Enter the address manually if needed.";
+                }
+            }
+        }
+
+        function selectLocation(lat, lng) {
+            lookupNumber++;
+
+            const requestNumber = lookupNumber;
+
+            updateMarker(lat, lng);
+            message.textContent = "Finding address...";
+
+            reverseLookup(lat, lng, requestNumber);
+        }
+
+        map.on("click", function (event) {
+            selectLocation(event.latlng.lat, event.latlng.lng);
+        });
+
+        searchButton.addEventListener("click", async function () {
+            const query = addressInput.value.trim();
+
+            if (!query) {
+                message.textContent =
+                    "Type an address or landmark first, then select Find Address on Map.";
+                addressInput.focus();
+                return;
+            }
+
+            searchButton.disabled = true;
+            message.textContent = "Searching for address...";
+
+            const requestNumber = ++lookupNumber;
+
+            try {
+                const url =
+                    "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" +
+                    encodeURIComponent(query);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error("Address search unavailable");
+                }
+
+                const results = await response.json();
+
+                if (requestNumber !== lookupNumber) {
+                    return;
+                }
+
+                if (!results.length) {
+                    message.textContent =
+                        "No matching address found. Try adding the area or landmark.";
+                    return;
+                }
+
+                const result = results[0];
+                const lat = Number(result.lat);
+                const lng = Number(result.lon);
+
+                map.setView([lat, lng], 17);
+                updateMarker(lat, lng);
+
+                addressInput.value = result.display_name || query;
+                message.textContent =
+                    "Address found and marked on the map.";
+
+            } catch (error) {
+                message.textContent =
+                    "Address search failed. Try clicking the map or enter a more specific address.";
+            } finally {
+                searchButton.disabled = false;
+            }
+        });
+
+        locationButton.addEventListener("click", function () {
+            if (!navigator.geolocation) {
+                message.textContent =
+                    "Location access is not supported by this browser.";
+                return;
+            }
+
+            locationButton.disabled = true;
+            message.textContent = "Requesting location permission...";
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    map.setView([lat, lng], 17);
+                    selectLocation(lat, lng);
+
+                    locationButton.disabled = false;
+                },
+                function () {
+                    message.textContent =
+                        "Could not get your location. Allow browser permission or select a map point manually.";
+
+                    locationButton.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 12000,
+                    maximumAge: 0
+                }
+            );
+        });
+
+        addressInput.addEventListener("input", function () {
+            lookupNumber++;
+
+            // If the address is edited, the user must verify the map marker.
+            message.textContent =
+                "Address edited. Make sure it matches the selected map marker.";
+        });
+
+        setTimeout(function () {
+            map.invalidateSize();
+        }, 250);
+
+        window.addEventListener("resize", function () {
+            map.invalidateSize();
+        });
+
+        window.resetCivicPulseMap = function () {
+            lookupNumber++;
+
+            if (marker) {
+                map.removeLayer(marker);
+                marker = null;
+            }
+
+            latitudeInput.value = "";
+            longitudeInput.value = "";
+
+            coordinates.textContent = "No map location selected.";
+            message.textContent =
+                "Click the map to select the problem location.";
+
+            map.closePopup();
+        };
+    });
+    </script>
+
+    <!-- Select category passed from the home page -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        const requestedCategory = params.get("category");
+        const dropdown = document.getElementById("category");
+
+        if (!requestedCategory || !dropdown) {
+            return;
+        }
+
+        const normalise = value => String(value).trim().toLowerCase();
+
+        const option = Array.from(dropdown.options).find(item =>
+            normalise(item.value) === normalise(requestedCategory) ||
+            normalise(item.textContent) === normalise(requestedCategory)
+        );
+
+        if (option) {
+            dropdown.value = option.value;
+        }
+    });
+    </script>
+</body>
+</html>
+ 
