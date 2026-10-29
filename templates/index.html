@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicPulse | Report. Track. Improve.</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #078568;
+            --primary-dark: #06664f;
+            --text: #18332e;
+            --muted: #647872;
+            --background: #f4f8f6;
+            --border: #e0eae6;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 6%;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand span { color: var(--text); }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a { font-size: 14px; font-weight: 700; }
+        .nav-links a:hover { color: var(--primary); }
+
+        .nav-cta {
+            padding: 10px 17px;
+            background: var(--primary);
+            color: white !important;
+            border-radius: 8px;
+        }
+
+        /* Admin Login button */
+        .admin-login-btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 15px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            color: var(--primary) !important;
+            background: white;
+            transition: background .2s, color .2s;
+        }
+
+        .admin-login-btn:hover {
+            background: var(--primary) !important;
+            color: white !important;
+        }
+
+        .hero {
+            min-height: 460px;
+            display: flex;
+            align-items: center;
+            padding: 55px 6%;
+            color: white;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(4,25,21,.94) 0%,
+                    rgba(4,25,21,.76) 45%,
+                    rgba(4,25,21,.18) 100%
+                ),
+                url("https://commons.wikimedia.org/wiki/Special:FilePath/Potholes%20in%20Bengaluru%20road.jpg?width=1800")
+                center 45% / cover no-repeat;
+        }
+
+        .hero-content { max-width: 660px; }
+
+        .eyebrow {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 7px 15px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .6px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 5.3vw, 62px);
+            line-height: 1.12;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span { color: #39d6a6; }
+
+        .hero-description {
+            max-width: 580px;
+            font-size: 17px;
+            line-height: 1.8;
+            color: #f1f7f4;
+            margin-bottom: 28px;
+        }
+
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 13px; }
+
+        .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 22px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 800;
+            transition: background .2s, transform .2s;
+        }
+
+        .button:hover { transform: translateY(-2px); }
+
+        .button-primary { background: var(--primary); color: white; }
+        .button-primary:hover { background: var(--primary-dark); }
+
+        .button-secondary {
+            color: white;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.7);
+        }
+
+        .button-secondary:hover { background: rgba(255,255,255,.22); }
+
+        .section {
+            max-width: 1250px;
+            margin: auto;
+            padding: 60px 25px;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 35px;
+        }
+
+        .section-heading .eyebrow {
+            color: var(--primary);
+            background: #dff4eb;
+            margin-bottom: 12px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(27px, 4vw, 37px);
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        .section-heading p { color: var(--muted); font-size: 15px; }
+
+        .issue-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .issue-card {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .issue-card:hover,
+        .issue-card:focus-visible {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(24,90,65,.12);
+            border-color: #83cbb4;
+            outline: none;
+        }
+
+        .issue-photo {
+            display: block;
+            width: 100%;
+            height: 190px;
+            object-fit: cover;
+            background: #e5eeea;
+        }
+
+        .issue-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+
+        .issue-icon {
+            display: grid;
+            place-items: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .water { background: #e1f1ff; }
+        .drainage { background: #e6e7ff; }
+        .road { background: #fff0d8; }
+        .garbage { background: #dff6e6; }
+        .streetlight { background: #fff5c9; }
+        .safety { background: #ffe4e4; }
+
+        .issue-card h3 { font-size: 19px; margin-bottom: 6px; }
+
+        .issue-card p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .card-link {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 800;
+            margin-top: auto;
+        }
+
+        .how-section {
+            background: white;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+        }
+
+        .step-card {
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: #fbfdfc;
+        }
+
+        .step-number {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #dff4eb;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .step-card h3 { font-size: 18px; margin-bottom: 8px; }
+        .step-card p { color: var(--muted); font-size: 14px; }
+
+        .cta-section { padding: 55px 6%; }
+
+        .cta-box {
+            max-width: 1100px;
+            margin: auto;
+            padding: 38px;
+            border-radius: 20px;
+            background: #0c7059;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .cta-box h2 { font-size: 28px; margin-bottom: 8px; }
+        .cta-box p { color: #d9eee7; max-width: 600px; }
+        .cta-box .button { background: white; color: #08634e; }
+
+        footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 25px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        footer strong { color: var(--primary); font-size: 17px; }
+
+        @media (max-width: 850px) {
+            .navbar {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .hero {
+                min-height: 430px;
+                background-position: 55% center;
+            }
+
+            .issue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .steps-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 520px) {
+            .navbar { padding: 15px 5%; }
+            .brand { font-size: 23px; }
+            .nav-links { gap: 12px; justify-content: flex-start; }
+            .nav-links a { font-size: 12px; }
+            .nav-cta, .admin-login-btn { padding: 8px 10px; }
+
+            .hero {
+                min-height: 420px;
+                padding: 42px 6%;
+                background-position: 52% center;
+            }
+
+            .hero-description { font-size: 15px; }
+            .issue-grid { grid-template-columns: 1fr; }
+            .issue-photo { height: 220px; }
+            .section { padding: 45px 18px; }
+            .cta-box { padding: 27px 22px; }
+            .cta-box h2 { font-size: 24px; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="brand" href="{{ url_for('home') }}">Civic<span>Pulse</span></a>
+
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="#issues">Report Issues</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a class="admin-login-btn" href="{{ url_for('admin_login') }}">Admin Login</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <span class="eyebrow">STRONGER COMMUNITIES</span>
+            <h1>Report Today,<br><span>Build a Better Tomorrow</span></h1>
+
+            <p class="hero-description">
+                Report community problems such as potholes, roadside garbage,
+                blocked drains, and leaking pipes. Help bring attention to
+                issues that need action.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('report') }}" class="button button-primary">
+                    Report an Issue →
+                </a>
+
+                <a href="#how-it-works" class="button button-secondary">
+                    Discover How It Works
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="section" id="issues">
+        <div class="section-heading">
+            <span class="eyebrow">REPORT LOCAL PROBLEMS</span>
+            <h2>What needs attention in your area?</h2>
+            <p>Choose a category to open the complaint form with your selected issue.</p>
+        </div>
+
+        <div class="issue-grid">
+            <a class="issue-card" href="{{ url_for('report', category='Water Supply') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Leak%20in%20rusted%20pipe%20side%20view.jpg?width=700" alt="Water leaking from a rusted pipe" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon water">💧</div>
+                    <h3>Water Supply</h3>
+                    <p>Report leaking water pipes, shortages, and interrupted public water supply.</p>
+                    <span class="card-link">Report water issue →</span>
+                </div>
+            </a>
+
+            <a class="issue-card" href="{{ url_for('report', category='Drainage') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Blocked%20water%20drain.jpg?width=700" alt="Blocked water drain" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon drainage">🌊</div>
+                    <h3>Drainage</h3>
+                    <p>Report blocked drains, overflowing sewage, and waterlogging on roads.</p>
+                    <span class="card-link">Report drainage issue →</span>
+                </div>
+            </a>
+
+            <a class="issue-card" href="{{ url_for('report', category='Road Damage') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Potholes%20in%20Bengaluru%20road.jpg?width=700" alt="Potholes on a Bengaluru road" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon road">🛣️</div>
+                    <h3>Road Damage</h3>
+                    <p>Report potholes, cracked asphalt, and damaged public roads.</p>
+                    <span class="card-link">Report road damage →</span>
+                </div>
+            </a>
+
+            <a class="issue-card" href="{{ url_for('report', category='Garbage') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Garbage%20Bangalore.jpg?width=700" alt="Garbage pile in Bangalore" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon garbage">♻️</div>
+                    <h3>Garbage</h3>
+                    <p>Report roadside garbage, overflowing bins, and uncollected waste.</p>
+                    <span class="card-link">Report garbage issue →</span>
+                </div>
+            </a>
+
+            <a class="issue-card" href="{{ url_for('report', category='Streetlight') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Broken%20lamppost%20-%20streetlight%20on%20A899%20Livingston%20Road%20-%20geograph.org.uk%20-%20957464.jpg?width=700" alt="Damaged streetlight pole" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon streetlight">💡</div>
+                    <h3>Streetlight</h3>
+                    <p>Report damaged streetlight poles and faulty public lighting.</p>
+                    <span class="card-link">Report lighting issue →</span>
+                </div>
+            </a>
+
+            <a class="issue-card" href="{{ url_for('report', category='Public Safety') }}">
+                <img class="issue-photo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Damaged%20footpath%20in%20India.jpg?width=700" alt="Damaged footpath in India" loading="lazy">
+                <div class="issue-content">
+                    <div class="issue-icon safety">🛡️</div>
+                    <h3>Public Safety</h3>
+                    <p>Report damaged footpaths and unsafe public infrastructure.</p>
+                    <span class="card-link">Report safety issue →</span>
+                </div>
+            </a>
+        </div>
+
+        <p style="margin-top:20px;color:#647872;font-size:12px;">
+            Photographs sourced from Wikimedia Commons. Images may be cropped to fit the cards.
+        </p>
+    </section>
+
+    <section class="how-section" id="how-it-works">
+        <div class="section">
+            <div class="section-heading">
+                <span class="eyebrow">SIMPLE AND TRANSPARENT</span>
+                <h2>How CivicPulse Works</h2>
+                <p>Three simple steps to bring attention to problems in your community.</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <h3>Choose and Report</h3>
+                    <p>Select a category, enter the location, describe the impact, and optionally upload a photo.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <h3>Smart Prioritization</h3>
+                    <p>CivicPulse calculates a priority score using severity, safety risk, and estimated community impact.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <h3>Record and Follow Up</h3>
+                    <p>Each saved complaint receives a unique complaint ID and a status for tracking.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-box">
+            <div>
+                <h2>Your Community Deserves Better.</h2>
+                <p>Every well-reported issue helps make local problems easier to understand and prioritize.</p>
+            </div>
+
+            <a class="button" href="{{ url_for('report') }}">Start a Report →</a>
+        </div>
+    </section>
+
+    <footer>
+        <strong>CivicPulse</strong>
+        <span>Report. Track. Improve.</span>
+        <span>Building better communities together.</span>
+ 
